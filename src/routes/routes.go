@@ -8,11 +8,21 @@ import (
   "regexp"
 )
 
-var dynamic_matcher = regexp.MustCompile(`(\{([\w_]+)\})`)
+var dynamic_matcher = regexp.MustCompile(`\{([\w_]+)\}`)
 
+type Route struct {
+  Matcher *regexp.Regexp
+  Names []string
+}
 
-func Compile (route string) (*regexp.Regexp) {
+func Compile (route string) (*Route) {
   clean_route := path.Clean(route)
+  names := dynamic_matcher.FindAllStringSubmatch(clean_route, -1)
+  size := len(names)
+  names_out := make([]string, size)
+  for i, v := range names {
+    names_out[i] = v[1]
+  }
   repl := dynamic_matcher.ReplaceAllLiteralString(clean_route, `([\w_]+)`)
-  return regexp.MustCompile(repl)
+  return &Route{regexp.MustCompile(repl), names_out}
 }
