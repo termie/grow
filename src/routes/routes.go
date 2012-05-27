@@ -11,11 +11,14 @@ import (
 
 var dynamic_matcher = regexp.MustCompile(`\{([\w_]+)\}`)
 
+type ParamsMap map[string]string
+
 type Route struct {
   Handler http.Handler
   Matcher *regexp.Regexp
   Names []string
 }
+
 
 
 func Compile (url_path string, handler http.Handler) (*Route) {
@@ -37,6 +40,17 @@ func Compile (url_path string, handler http.Handler) (*Route) {
 func (route *Route) Match (url_path string) (bool) {
   return route.Matcher.MatchString(url_path)
 }
+
+func (route *Route) Parse (url_path string) (ParamsMap) {
+  matches := route.Matcher.FindAllStringSubmatch(url_path, -1)
+  p_map := make(ParamsMap)
+  for i, k := range route.Names {
+    p_map[k] = matches[0][i +1]
+  }
+  return p_map
+}
+
+
 
 
 type Router struct {
